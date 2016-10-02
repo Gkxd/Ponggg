@@ -6,15 +6,24 @@ public class PongBall : MonoBehaviour
 
     public float speed;
 
+	public float angle;
+
     private new Rigidbody rigidbody;
 
     private Vector3 direction;
 
     private bool hitLeft, hitTop, hitRight, hitBottom;
 
+	void SetDirection()
+	{
+		direction = new Vector3 (Mathf.Sin (angle), Mathf.Cos (angle));
+		direction.Normalize ();
+	}
+
     void Start()
     {
-        direction = Random.insideUnitCircle.normalized;
+		angle = Random.value * 2 * Mathf.PI;
+		SetDirection ();
         rigidbody = GetComponent<Rigidbody>();
     }
 
@@ -32,4 +41,11 @@ public class PongBall : MonoBehaviour
     {
         direction = Vector3.Reflect(direction, normal);
     }
+
+	void Update(){
+		if (Input.GetKeyDown ("up")) {
+			angle += Mathf.PI / 32;
+			SetDirection ();
+		}
+	}
 }
