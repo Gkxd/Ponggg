@@ -6,18 +6,27 @@ public class PongBall : MonoBehaviour
 
     public float speed;
 
-	public float angle;
-
     private new Rigidbody rigidbody;
 
     private Vector3 direction;
+
+	public float angle;
 
     private bool hitLeft, hitTop, hitRight, hitBottom;
 
 	void SetDirection()
 	{
-		direction = new Vector3 (Mathf.Sin (angle), Mathf.Cos (angle));
+		direction = new Vector3 (Mathf.Cos (angle), Mathf.Sin (angle));
 		direction.Normalize ();
+	}
+
+	float GetAngle()
+	{
+		float ang = Mathf.Atan (direction.y / direction.x);
+		if (Mathf.Sign(direction.x) == -1){
+			ang += Mathf.PI;
+		}
+		return ang;
 	}
 
     void Start()
@@ -44,7 +53,25 @@ public class PongBall : MonoBehaviour
 
 	void Update(){
 		if (Input.GetKeyDown ("up")) {
-			angle += Mathf.PI / 32;
+			angle = GetAngle ();
+
+			if (angle > Mathf.PI / 2 && angle < Mathf.PI * 3 / 2) {
+				angle -= Mathf.PI / 16;
+			} else {
+				angle += Mathf.PI / 16;
+			}
+
+			SetDirection ();
+		}
+		if (Input.GetKeyDown ("down")) {
+			angle = GetAngle ();
+
+			if (angle > Mathf.PI / 2 && angle < Mathf.PI * 3 / 2) {
+				angle += Mathf.PI / 16;
+			} else {
+				angle -= Mathf.PI / 16;
+			}
+
 			SetDirection ();
 		}
 	}
