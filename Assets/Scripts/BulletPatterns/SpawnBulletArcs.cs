@@ -25,8 +25,8 @@ public class SpawnBulletArcs : MonoBehaviour
         Vector3 endDirection = Quaternion.Euler(new Vector3(0, 0, arcRange * 0.5f)) * transform.right;
 
         // Debug visuals
-        Debug.DrawRay(transform.position, startDirection, Color.red, 100);
-        Debug.DrawRay(transform.position, endDirection, Color.blue, 100);
+        // Debug.DrawRay(transform.position, startDirection, Color.red, 100);
+        // Debug.DrawRay(transform.position, endDirection, Color.blue, 100);
 
         // Spawn the bullets
         for (int i = 0; i < arcLayers; i++)
