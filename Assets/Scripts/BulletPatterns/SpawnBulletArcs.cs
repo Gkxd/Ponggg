@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class SpawnBulletArcs : MonoBehaviour
+public class SpawnBulletArcs : _BulletSpawner
 {
     [Tooltip("The bullet that you want to spawn. Must have a rigidbody or this will crash.")]
     public GameObject bullet;
@@ -37,6 +37,7 @@ public class SpawnBulletArcs : MonoBehaviour
                 Vector3 direction = Vector3.Slerp(startDirection, endDirection, j / (arcAmount - 1f));
                 GameObject b = (GameObject)Instantiate(bullet, transform.position, Quaternion.identity);
                 b.GetComponent<Rigidbody>().velocity = layerSpeed * direction;
+                b.GetComponent<BulletId>().playerId = playerId;
             }
         }
 
