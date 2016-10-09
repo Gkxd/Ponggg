@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class SpawnBulletWall : MonoBehaviour
+public class SpawnBulletWall : _BulletSpawner
 {
 	[Tooltip("The bullet that you want to spawn. Must have a rigidbody or this will crash.")]
 	public GameObject bullet;
@@ -39,6 +39,7 @@ public class SpawnBulletWall : MonoBehaviour
 				float offset = j * (wallRange / (wallAmount-1)) - wallRange/2;
 				GameObject b = (GameObject)Instantiate(bullet, new Vector3(x, y + offset, z), Quaternion.identity);
 				b.GetComponent<Rigidbody>().velocity = layerSpeed * transform.right; // Hardcoded to go right
+				b.GetComponent<BulletId>().playerId = playerId;
 			}
 		}
 
