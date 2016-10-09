@@ -4,7 +4,6 @@ using System.Collections;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
-
     #region Serialized Fields
     [Header("Player Stats")]
     public int maxHp;
@@ -41,10 +40,13 @@ public class PlayerController : MonoBehaviour
     public float lastTimeOfUltimateAttack { get; private set; }
 
     private new Rigidbody rigidbody;
+    private int playerId;
 
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
+        StartCoroutine(RecoverHp());
+        StartCoroutine(RecoverMp());
     }
 
     void FixedUpdate()
@@ -84,7 +86,8 @@ public class PlayerController : MonoBehaviour
             (Time.time - lastTimeOfBasicAttack) > basicAttackCooldown)
         {
             lastTimeOfBasicAttack = Time.time;
-            Instantiate(basicAttack, rigidbody.position, aimRotation);
+            _BulletSpawner spawner = ((GameObject)Instantiate(basicAttack, rigidbody.position, aimRotation)).GetComponent<_BulletSpawner>();
+            spawner.playerId = playerId;
         }
         if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
             (Time.time - lastTimeOfSpecialAttack) > specialAttackCooldown &&
