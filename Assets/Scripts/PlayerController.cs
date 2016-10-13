@@ -45,81 +45,80 @@ public class PlayerController : NetworkBehaviour
 
     void Start()
     {
-      rigidbody = GetComponent<Rigidbody>();
-      StartCoroutine(RecoverHp());
-      StartCoroutine(RecoverMp());
-      playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
-    }
-
-    void FixedUpdate()
-    {
-      if (isLocalPlayer)
-      {
-        Vector3 velocity = Vector3.zero;
-        if (Input.GetKey(KeySettings.MOVE_UP))
-        {
-          velocity += Vector3.up;
-        }
-        if (Input.GetKey(KeySettings.MOVE_DOWN))
-        {
-          velocity += Vector3.down;
-        }
-        if (Input.GetKey(KeySettings.MOVE_LEFT))
-        {
-          velocity += Vector3.left;
-        }
-        if (Input.GetKey(KeySettings.MOVE_RIGHT))
-        {
-          velocity += Vector3.right;
-        }
-
-        rigidbody.velocity = velocity.normalized * speed;
-      }
+        rigidbody = GetComponent<Rigidbody>();
+        StartCoroutine(RecoverHp());
+        StartCoroutine(RecoverMp());
+        playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
     }
 
     void Update()
     {
-    if (!isLocalPlayer)
-      return;
+        if (!isLocalPlayer)
+            return;
 
-      Vector3 aimDirection = Vector3.ProjectOnPlane((playerCamera.ScreenToWorldPoint(Input.mousePosition) - rigidbody.position), playerCamera.transform.forward).normalized;
-      Quaternion aimRotation = Quaternion.FromToRotation(playerCamera.transform.right, aimDirection);
+        #region Movement
 
-      if (Input.GetKey(KeySettings.MELEE_ATTACK) &&
-          (Time.time - lastTimeOfMeleeAttack) > meleeAttackCooldown)
-      {
-        lastTimeOfMeleeAttack = Time.time;
-      }
-      if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
-          (Time.time - lastTimeOfBasicAttack) > basicAttackCooldown)
-      {
-        lastTimeOfBasicAttack = Time.time;
-        CmdBasicAttack(aimRotation);
-      }
-      if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
-          (Time.time - lastTimeOfSpecialAttack) > specialAttackCooldown &&
-          mp > specialAttackMpCost)
-      {
-        lastTimeOfSpecialAttack = Time.time;
-      }
-      if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
-          (Time.time - lastTimeOfUltimateAttack) > specialAttackCooldown &&
-          mp > ultimateAttackMpCost)
-      {
-        lastTimeOfUltimateAttack = Time.time;
-      }
+        Vector3 velocity = Vector3.zero;
+        if (Input.GetKey(KeySettings.MOVE_UP))
+        {
+            velocity += Vector3.up;
+        }
+        if (Input.GetKey(KeySettings.MOVE_DOWN))
+        {
+            velocity += Vector3.down;
+        }
+        if (Input.GetKey(KeySettings.MOVE_LEFT))
+        {
+            velocity += Vector3.left;
+        }
+        if (Input.GetKey(KeySettings.MOVE_RIGHT))
+        {
+            velocity += Vector3.right;
+        }
+        
+        rigidbody.velocity = velocity.normalized * speed;
+        #endregion
+
+        #region Attacks
+        Vector3 aimDirection = Vector3.ProjectOnPlane((playerCamera.ScreenToWorldPoint(Input.mousePosition) - rigidbody.position), playerCamera.transform.forward).normalized;
+        Quaternion aimRotation = Quaternion.FromToRotation(playerCamera.transform.right, aimDirection);
+
+        if (Input.GetKey(KeySettings.MELEE_ATTACK) &&
+            (Time.time - lastTimeOfMeleeAttack) > meleeAttackCooldown)
+        {
+            lastTimeOfMeleeAttack = Time.time;
+        }
+        if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
+            (Time.time - lastTimeOfBasicAttack) > basicAttackCooldown)
+        {
+            lastTimeOfBasicAttack = Time.time;
+            CmdBasicAttack(aimRotation);
+        }
+        if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
+            (Time.time - lastTimeOfSpecialAttack) > specialAttackCooldown &&
+            mp > specialAttackMpCost)
+        {
+            lastTimeOfSpecialAttack = Time.time;
+        }
+        if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
+            (Time.time - lastTimeOfUltimateAttack) > specialAttackCooldown &&
+            mp > ultimateAttackMpCost)
+        {
+            lastTimeOfUltimateAttack = Time.time;
+        }
+        #endregion Attacks
     }
 
     [Command]
     void CmdBasicAttack(Quaternion aim)
     {
-      var attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
-      NetworkServer.Spawn(attack);
+        var attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
+        NetworkServer.Spawn(attack);
     }
 
     void OnTriggerEnter(Collider c)
     {
-        if (c.GetComponent<BulletId>().playerId == playerId) return; // 
+        if (c.GetComponent<BulletId>().playerId == playerId) return;
     }
 
     private IEnumerator RecoverHp()
