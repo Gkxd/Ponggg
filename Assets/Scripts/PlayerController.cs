@@ -103,6 +103,11 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void OnTriggerEnter(Collider c)
+    {
+        if (c.GetComponent<BulletId>().playerId == playerId) return; // 
+    }
+
     private IEnumerator RecoverHp()
     {
         while (true)
