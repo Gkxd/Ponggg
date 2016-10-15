@@ -37,6 +37,7 @@ public class SpawnBulletArcs : _BulletSpawner
             {
                 Vector3 direction = Vector3.Slerp(startDirection, endDirection, j / (arcAmount - 1f));
                 GameObject b = (GameObject)Instantiate(bullet, transform.position, Quaternion.identity);
+                b.transform.right = direction;
                 b.GetComponent<Rigidbody>().velocity = layerSpeed * direction;
                 b.GetComponent<BulletId>().playerId = playerId;
             }
