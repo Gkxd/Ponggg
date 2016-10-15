@@ -29,13 +29,59 @@ public class PlayerController : NetworkBehaviour
     public int ultimateAttackMpCost;
     #endregion
 
-    public int hp { get; private set; }
-    public int mp { get; private set; }
+    #region SyncVars
+    [SyncVar]
+    private int _hp;
 
-    public float lastTimeOfMeleeAttack { get; private set; }
-    public float lastTimeOfBasicAttack { get; private set; }
-    public float lastTimeOfSpecialAttack { get; private set; }
-    public float lastTimeOfUltimateAttack { get; private set; }
+    [SyncVar]
+    private int _mp;
+
+    [SyncVar]
+    private float _lastTimeOfMeleeAttack;
+
+    [SyncVar]
+    private float _lastTimeOfBasicAttack;
+
+    [SyncVar]
+    private float _lastTimeOfSpecialAttack;
+
+    [SyncVar]
+    private float _lastTimeOfUltimateAttack;
+    #endregion
+
+    #region Properties
+    public int hp
+    {
+        get { return _hp; }
+        private set { _hp = value; }
+    }
+    public int mp
+    {
+        get { return _mp; }
+        private set { _mp = value; }
+    }
+
+    public float lastTimeOfMeleeAttack
+    {
+        get { return _lastTimeOfMeleeAttack; }
+        private set { _lastTimeOfMeleeAttack = value; }
+    }
+    public float lastTimeOfBasicAttack
+    {
+        get { return _lastTimeOfBasicAttack; }
+        private set { _lastTimeOfBasicAttack = value; }
+    }
+    public float lastTimeOfSpecialAttack
+    {
+        get { return _lastTimeOfSpecialAttack; }
+        private set { _lastTimeOfSpecialAttack = value; }
+    }
+    public float lastTimeOfUltimateAttack
+    {
+        get { return _lastTimeOfUltimateAttack; }
+        private set { _lastTimeOfUltimateAttack = value; }
+    }
+    #endregion
 
     private new Rigidbody rigidbody;
     private Camera playerCamera;
