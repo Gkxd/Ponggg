@@ -1,7 +1,15 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
-public class BulletId : MonoBehaviour
+public class BulletId : NetworkBehaviour
 {
-    public int playerId { get; set; }
+    [SyncVar]
+    private uint _playerId;
+
+    public uint playerId
+    {
+        get { return _playerId; }
+        set { _playerId = value; }
+    }
 }

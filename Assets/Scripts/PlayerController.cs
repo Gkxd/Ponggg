@@ -27,9 +27,6 @@ public class PlayerController : NetworkBehaviour
     public GameObject ultimateAttack;
     public float ultimateAttackCooldown;
     public int ultimateAttackMpCost;
-
-    [Header("Miscellaneous")]
-    public Camera playerCamera;
     #endregion
 
     public int hp { get; private set; }
@@ -41,7 +38,7 @@ public class PlayerController : NetworkBehaviour
     public float lastTimeOfUltimateAttack { get; private set; }
 
     private new Rigidbody rigidbody;
-    private int playerId;
+    private Camera playerCamera;
 
     void Start()
     {
@@ -53,8 +50,7 @@ public class PlayerController : NetworkBehaviour
 
     void Update()
     {
-        if (!isLocalPlayer)
-            return;
+        if (!isLocalPlayer) return;
 
         #region Movement
 
@@ -75,7 +71,7 @@ public class PlayerController : NetworkBehaviour
         {
             velocity += Vector3.right;
         }
-        
+
         rigidbody.velocity = velocity.normalized * speed;
         #endregion
 
@@ -112,13 +108,17 @@ public class PlayerController : NetworkBehaviour
     [Command]
     void CmdBasicAttack(Quaternion aim)
     {
-        var attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
+        GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
+        attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
         NetworkServer.Spawn(attack);
     }
 
     void OnTriggerEnter(Collider c)
     {
-        if (c.GetComponent<BulletId>().playerId == playerId) return;
+        Debug.LogError(c.GetComponent<BulletId>().playerId + " " + netId.Value);
+        if (c.GetComponent<BulletId>().playerId == netId.Value) return;
+
+        Destroy(c.gameObject);
     }
 
     private IEnumerator RecoverHp()
