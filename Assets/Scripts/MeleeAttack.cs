@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
-public class MeleeAttack : MonoBehaviour
+public class MeleeAttack : NetworkBehaviour
 {
     [Range(30, 120)]
     public float angle;
@@ -14,6 +15,12 @@ public class MeleeAttack : MonoBehaviour
     public float strength;
 
     public AnimationCurve angleSpeed;
+
+  /// <summary>
+  /// The melee attack will follow this object around during its lifetime
+  /// </summary>
+  [SyncVar]
+  public GameObject targetObject;
 
     public bool clockWise { get; set; }
 
@@ -66,6 +73,8 @@ public class MeleeAttack : MonoBehaviour
 
     void Update()
     {
+        transform.position = targetObject.transform.position;
+
         float progress = (Time.time - startTime) * 3;
         if (progress < 1)
         {
@@ -120,6 +129,7 @@ public class MeleeAttack : MonoBehaviour
 
             if (progress > 1)
             {
+              if (isLocalPlayer)
                 Destroy(gameObject);
             }
         }
