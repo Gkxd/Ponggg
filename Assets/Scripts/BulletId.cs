@@ -2,9 +2,9 @@
 using UnityEngine.Networking;
 using System.Collections;
 
-public class BulletId : NetworkBehaviour
+public class BulletId : MonoBehaviour
 {
-    [SyncVar]
+    //[SyncVar]
     private uint _playerId;
 
     public uint playerId
