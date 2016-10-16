@@ -135,6 +135,7 @@ public class PlayerController : NetworkBehaviour
         {
             lastTimeOfBasicAttack = Time.time;
             CmdBasicAttack(aimRotation);
+            Debug.LogError("Hello! " + Time.time);
         }
         if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
             (Time.time - lastTimeOfSpecialAttack) > specialAttackCooldown &&
@@ -154,9 +155,17 @@ public class PlayerController : NetworkBehaviour
     [Command]
     void CmdBasicAttack(Quaternion aim)
     {
+        //GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
+        //attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
+        //NetworkServer.Spawn(attack);
+        RpcBasicAttack(aim);
+    }
+
+    [ClientRpc]
+    void RpcBasicAttack(Quaternion aim)
+    {
         GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
         attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
-        NetworkServer.Spawn(attack);
     }
 
     void OnTriggerEnter(Collider c)

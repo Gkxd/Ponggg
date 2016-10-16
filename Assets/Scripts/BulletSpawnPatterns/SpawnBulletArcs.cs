@@ -25,6 +25,8 @@ public class SpawnBulletArcs : _BulletSpawner
         Vector3 startDirection = Quaternion.Euler(new Vector3(0, 0, -arcRange * 0.5f)) * transform.right;
         Vector3 endDirection = Quaternion.Euler(new Vector3(0, 0, arcRange * 0.5f)) * transform.right;
 
+        Debug.LogError("Attack! " + Time.time);
+
         // Debug visuals
         // Debug.DrawRay(transform.position, startDirection, Color.red, 100);
         // Debug.DrawRay(transform.position, endDirection, Color.blue, 100);
