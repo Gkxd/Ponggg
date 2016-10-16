@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
-public class GameState : MonoBehaviour
+public class GameState : NetworkBehaviour
 {
     public GameObject ballPrefab;
 
@@ -11,8 +12,19 @@ public class GameState : MonoBehaviour
     
     void Start()
     {
-        instance = this;
-        Ball = ((GameObject)Instantiate(ballPrefab, Vector3.zero, Quaternion.identity)).GetComponent<PongBall>();
+      instance = this;
+
+      if (!GameObject.FindObjectOfType<PongBall>())
+      {
+
+        GameObject ballObject = (GameObject)Instantiate(ballPrefab, Vector3.zero, Quaternion.identity);
+        Ball = ballObject.GetComponent<PongBall>();
+        NetworkServer.Spawn(ballObject);
+      }
+      else
+      {
+        Ball = GameObject.FindObjectOfType<PongBall>();
+      }
     }
     
     void Update()

@@ -129,6 +129,7 @@ public class PlayerController : NetworkBehaviour
             (Time.time - lastTimeOfMeleeAttack) > meleeAttackCooldown)
         {
             lastTimeOfMeleeAttack = Time.time;
+            CmdMeleeAttack(aimRotation);
         }
         if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
             (Time.time - lastTimeOfBasicAttack) > basicAttackCooldown)
@@ -167,6 +168,14 @@ public class PlayerController : NetworkBehaviour
         GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
         attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
     }
+
+  [Command]
+  void CmdMeleeAttack(Quaternion aim)
+  {
+    GameObject attack = (GameObject)Instantiate(meleeAttack, rigidbody.position, aim);
+    attack.GetComponent<MeleeAttack>().targetObject = this.gameObject;
+    NetworkServer.Spawn(attack);
+  }
 
     void OnTriggerEnter(Collider c)
     {
