@@ -136,7 +136,6 @@ public class PlayerController : NetworkBehaviour
         {
             lastTimeOfBasicAttack = Time.time;
             CmdBasicAttack(aimRotation);
-            Debug.LogError("Hello! " + Time.time);
         }
         if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
             (Time.time - lastTimeOfSpecialAttack) > specialAttackCooldown &&
@@ -159,29 +158,39 @@ public class PlayerController : NetworkBehaviour
         //GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
         //attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
         //NetworkServer.Spawn(attack);
+        Debug.LogError("Basic Attack Server " + Time.time);
         RpcBasicAttack(aim);
     }
 
     [ClientRpc]
     void RpcBasicAttack(Quaternion aim)
     {
+        Debug.LogError("Basic Attack Client " + Time.time);
         GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
         attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
     }
 
-  [Command]
-  void CmdMeleeAttack(Quaternion aim)
-  {
-    GameObject attack = (GameObject)Instantiate(meleeAttack, rigidbody.position, aim);
-    attack.GetComponent<MeleeAttack>().targetObject = this.gameObject;
-    NetworkServer.Spawn(attack);
-  }
+    [Command]
+    void CmdMeleeAttack(Quaternion aim)
+    {
+        //GameObject attack = (GameObject)Instantiate(meleeAttack, rigidbody.position, aim);
+        //attack.GetComponent<MeleeAttack>().targetObject = this.gameObject;
+        //NetworkServer.Spawn(attack);
+        Debug.LogError("Melee Attack Server " + Time.time);
+        RpcMeleeAttack(aim);
+    }
+
+    [ClientRpc]
+    void RpcMeleeAttack(Quaternion aim)
+    {
+        Debug.LogError("Melee Attack Client " + Time.time);
+        GameObject attack = (GameObject)Instantiate(meleeAttack, rigidbody.position, aim);
+        attack.GetComponent<MeleeAttack>().targetObject = this.gameObject;
+    }
 
     void OnTriggerEnter(Collider c)
     {
-        //Debug.LogError(c.GetComponent<BulletId>().playerId + " " + netId.Value);
         if (c.GetComponent<BulletId>().playerId == netId.Value) return;
-
         Destroy(c.gameObject);
     }
 

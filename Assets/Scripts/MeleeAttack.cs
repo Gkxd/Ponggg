@@ -15,12 +15,8 @@ public class MeleeAttack : NetworkBehaviour
     public float strength;
 
     public AnimationCurve angleSpeed;
-
-  /// <summary>
-  /// The melee attack will follow this object around during its lifetime
-  /// </summary>
-  [SyncVar]
-  public GameObject targetObject;
+    
+    public GameObject targetObject;
 
     public bool clockWise { get; set; }
 
@@ -73,8 +69,6 @@ public class MeleeAttack : NetworkBehaviour
 
     void Update()
     {
-        transform.position = targetObject.transform.position;
-
         float progress = (Time.time - startTime) * 3;
         if (progress < 1)
         {
@@ -84,9 +78,7 @@ public class MeleeAttack : NetworkBehaviour
             Vector3 currentWorldRay = transform.TransformDirection(currentRay);
             Vector3 currentWorldTangent = transform.TransformDirection(currentTangent);
 
-            Debug.DrawRay(transform.position, currentWorldRay * range, Color.blue);
-            Debug.DrawRay(transform.position + currentWorldRay * range, currentWorldTangent * strength, Color.green);
-            Vector3 ballRay = GameState.Ball.transform.position - transform.position;
+            Vector3 ballRay = GameState.Ball.transform.position - targetObject.transform.position;
             if (!hit && Vector3.Angle(currentWorldRay, ballRay) < 15 && ballRay.sqrMagnitude <= range * range)
             {
                 GameState.Ball.direction = currentWorldTangent;
@@ -94,14 +86,14 @@ public class MeleeAttack : NetworkBehaviour
                 hit = true;
             }
 
-            Vector3 basePoint = transform.InverseTransformPoint(transform.position);
+            Vector3 basePoint = transform.InverseTransformPoint(targetObject.transform.position);
             Vector3 endPoint = basePoint + currentRay * range;
 
             vertexList.Add(basePoint);
             vertexList.Add(endPoint);
 
             uvList.Push(new Vector3(1 - progress, 0));
-            uvList.Push(new Vector3(1 - progress, 0));
+            uvList.Push(new Vector3(0.5f - progress, 0));
 
             int n = vertexList.Count;
             if (n > 2)
@@ -112,7 +104,7 @@ public class MeleeAttack : NetworkBehaviour
 
                 triangleList.Add(n - 1); // this end
                 triangleList.Add(n - 2); // this base
-                triangleList.Add(n - 3); // prev base
+                triangleList.Add(n - 4); // prev base
             }
 
             mesh.vertices = vertexList.ToArray();
@@ -126,10 +118,8 @@ public class MeleeAttack : NetworkBehaviour
             Color c = material.color;
             c.a = Mathf.Lerp(1, 0, progress);
             material.color = c;
-
             if (progress > 1)
             {
-              if (isLocalPlayer)
                 Destroy(gameObject);
             }
         }

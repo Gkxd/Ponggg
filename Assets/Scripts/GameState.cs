@@ -9,24 +9,23 @@ public class GameState : NetworkBehaviour
     private static GameState instance;
 
     public static PongBall Ball { get; set; }
-    
+
     void Start()
     {
-      instance = this;
+        instance = this;
 
-      if (!GameObject.FindObjectOfType<PongBall>())
-      {
-
-        GameObject ballObject = (GameObject)Instantiate(ballPrefab, Vector3.zero, Quaternion.identity);
-        Ball = ballObject.GetComponent<PongBall>();
-        NetworkServer.Spawn(ballObject);
-      }
-      else
-      {
-        Ball = GameObject.FindObjectOfType<PongBall>();
-      }
+        if (!GameObject.FindObjectOfType<PongBall>())
+        {
+            GameObject ballObject = (GameObject)Instantiate(ballPrefab, Vector3.zero, Quaternion.identity);
+            Ball = ballObject.GetComponent<PongBall>();
+            NetworkServer.Spawn(ballObject);
+        }
+        else
+        {
+            Ball = GameObject.FindObjectOfType<PongBall>();
+        }
     }
-    
+
     void Update()
     {
 
