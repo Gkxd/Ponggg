@@ -10,8 +10,8 @@ public class SpawnBulletWall : _BulletSpawner
 	public int wallAmount;
 	[Tooltip("The width of the wall of bullets")]
 	public float wallRange;
-
-
+	[Tooltip("The direction the wall will travel")]
+	public float angle;
 	[Tooltip("The number of walls that you will shoot")]
 	public int wallLayers;
 	[Tooltip("The speed of the slowest layer")]
@@ -21,10 +21,9 @@ public class SpawnBulletWall : _BulletSpawner
 
 	void Start()
 	{
+		Vector3 direction = Quaternion.Euler (new Vector3(0, 0, angle)) * transform.right;
 
-		// Debug visuals
-		// Debug.DrawRay(transform.position, startDirection, Color.red, 100);
-		// Debug.DrawRay(transform.position, endDirection, Color.blue, 100);
+		Debug.LogError("Wall attack! " + Time.time);
 
 		// Spawn the bullets
 		for (int i = 0; i < wallLayers; i++)
@@ -37,7 +36,8 @@ public class SpawnBulletWall : _BulletSpawner
 				float z = transform.position.z;
 				float offset = j * (wallRange / (wallAmount-1)) - wallRange/2;
 				GameObject b = (GameObject)Instantiate(bullet, new Vector3(x, y + offset, z), Quaternion.identity);
-				b.GetComponent<Rigidbody>().velocity = layerSpeed * transform.right; // Hardcoded to go right
+				b.transform.RotateAround (transform.position, new Vector3(0,0,1) , angle);
+				b.GetComponent<Rigidbody>().velocity = layerSpeed * direction; // Hardcoded to go right
 				b.GetComponent<BulletId>().playerId = playerId;
 			}
 		}
