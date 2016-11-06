@@ -206,6 +206,11 @@ public class PlayerController : NetworkBehaviour
             lastTimeOfUltimateAttack = Time.time;
         }
         #endregion Attacks
+
+        if (hp <= 0)
+        {
+            Debug.LogError("Player " + playerId + " HP reached 0!");
+        }
     }
 
     [Command]
@@ -233,13 +238,17 @@ public class PlayerController : NetworkBehaviour
         MeleeAttack attack = ((GameObject)Instantiate(meleeAttack, rigidbody.position, aim)).GetComponent<MeleeAttack>();
         attack.target = transform;
         attack.clockWise = clockWise;
-        
     }
 
     void OnTriggerEnter(Collider c)
     {
         if (c.GetComponent<BulletId>().playerId == playerId) return;
         Destroy(c.gameObject);
+
+        if (networkIdentity.isServer)
+        {
+            hp--;
+        }
     }
 
     private IEnumerator RecoverHp()
@@ -264,9 +273,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (networkIdentity.isServer)
         {
-            Debug.LogError("Player " + playerId + " PrevHP: " + hp);
             hp -= Mathf.Max(hp / 5, 10);
-            Debug.LogError("Player " + playerId + " CurrentHP: " + hp);
         }
     }
 }
