@@ -231,7 +231,7 @@ public class PlayerController : NetworkBehaviour
 
     void OnTriggerEnter(Collider c)
     {
-        if (c.GetComponent<BulletId>().playerId == netId.Value) return;
+        if (c.GetComponent<BulletId>().playerId == playerId) return;
         Destroy(c.gameObject);
     }
 
