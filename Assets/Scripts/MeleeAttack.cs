@@ -77,12 +77,15 @@ public class MeleeAttack : NetworkBehaviour
             Vector3 currentWorldRay = transform.TransformDirection(currentRay);
             Vector3 currentWorldTangent = transform.TransformDirection(currentTangent);
 
-            Vector3 ballRay = GameState.Ball.transform.position - target.position;
-            if (!hit && Vector3.Angle(currentWorldRay, ballRay) < 15 && ballRay.sqrMagnitude <= range * range)
+            if (GameState.Ball != null)
             {
-                GameState.Ball.direction = currentWorldTangent;
-                GameState.Ball.speed += strength;
-                hit = true;
+                Vector3 ballRay = GameState.Ball.transform.position - target.position;
+                if (!hit && Vector3.Angle(currentWorldRay, ballRay) < 15 && ballRay.sqrMagnitude <= range * range)
+                {
+                    GameState.Ball.direction = currentWorldTangent;
+                    GameState.Ball.speed += strength;
+                    hit = true;
+                }
             }
 
             Vector3 basePoint = transform.InverseTransformPoint(target.position);

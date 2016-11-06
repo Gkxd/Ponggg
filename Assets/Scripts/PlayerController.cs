@@ -95,15 +95,20 @@ public class PlayerController : NetworkBehaviour
 
     private new Rigidbody rigidbody;
     private Camera playerCamera;
+    private NetworkIdentity networkIdentity;
 
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
+        networkIdentity = GetComponent<NetworkIdentity>();
+        playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
+
+        hp = maxHp;
+
         StartCoroutine(RecoverHp());
         StartCoroutine(RecoverMp());
-        playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
         
-        if (playerId == -1)
+        if (networkIdentity.isServer)
         {
             CmdSetPlayerNumber();
         }
@@ -111,10 +116,12 @@ public class PlayerController : NetworkBehaviour
         if (playerId == 0)
         {
             transform.position = new Vector3(-7, 0, 0);
+            GameState.Player0 = this;
         }
         else if (playerId == 1)
         {
             transform.position = new Vector3(7, 0, 0);
+            GameState.Player1 = this;
         }
         else
         {
@@ -250,6 +257,16 @@ public class PlayerController : NetworkBehaviour
         {
             mp = Mathf.Min(mp + 1, maxMp);
             yield return new WaitForSeconds(mpRecoverTime);
+        }
+    }
+
+    public void MissedPongBall()
+    {
+        if (networkIdentity.isServer)
+        {
+            Debug.LogError("Player " + playerId + " PrevHP: " + hp);
+            hp -= Mathf.Max(hp / 5, 10);
+            Debug.LogError("Player " + playerId + " CurrentHP: " + hp);
         }
     }
 }
