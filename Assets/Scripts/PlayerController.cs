@@ -31,6 +31,9 @@ public class PlayerController : NetworkBehaviour
 
     #region SyncVars
     [SyncVar]
+    private int _playerId = -1;
+
+    [SyncVar]
     private int _hp;
 
     [SyncVar]
@@ -49,7 +52,14 @@ public class PlayerController : NetworkBehaviour
     private float _lastTimeOfUltimateAttack;
     #endregion
 
-    #region Properties
+    #region Properties and Fields
+
+    public int playerId
+    {
+        get { return _playerId; }
+        set { _playerId = value; }
+    }
+
     public int hp
     {
         get { return _hp; }
@@ -92,6 +102,31 @@ public class PlayerController : NetworkBehaviour
         StartCoroutine(RecoverHp());
         StartCoroutine(RecoverMp());
         playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
+        
+        if (playerId == -1)
+        {
+            CmdSetPlayerNumber();
+        }
+
+        if (playerId == 0)
+        {
+            transform.position = new Vector3(-7, 0, 0);
+        }
+        else if (playerId == 1)
+        {
+            transform.position = new Vector3(7, 0, 0);
+        }
+        else
+        {
+            GetComponent<NetworkIdentity>().connectionToServer.Disconnect();
+        }
+    }
+
+    [Command]
+    void CmdSetPlayerNumber()
+    {
+        Debug.LogError("Player ID set to " + GameState.PlayerCounter);
+        playerId = GameState.PlayerCounter++;
     }
 
     void Update()
@@ -118,7 +153,18 @@ public class PlayerController : NetworkBehaviour
             velocity += Vector3.right;
         }
 
-        rigidbody.velocity = velocity.normalized * speed;
+        Vector3 newPosition = transform.position + velocity.normalized * speed * Time.deltaTime;
+        if (playerId == 0)
+        {
+            newPosition.x = Mathf.Clamp(newPosition.x, -9, -3);
+        }
+        else
+        {
+            newPosition.x = Mathf.Clamp(newPosition.x, 3, 9);
+        }
+        newPosition.y = Mathf.Clamp(newPosition.y, -5, 5);
+
+        transform.position = newPosition;
         #endregion
 
         #region Attacks
@@ -129,7 +175,10 @@ public class PlayerController : NetworkBehaviour
             (Time.time - lastTimeOfMeleeAttack) > meleeAttackCooldown)
         {
             lastTimeOfMeleeAttack = Time.time;
-            CmdMeleeAttack(aimRotation);
+
+            bool up = Vector3.Dot(aimDirection, Vector3.up) > 0;
+
+            CmdMeleeAttack(aimRotation, up ^ playerId == 1);
         }
         if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
             (Time.time - lastTimeOfBasicAttack) > basicAttackCooldown)
@@ -155,37 +204,29 @@ public class PlayerController : NetworkBehaviour
     [Command]
     void CmdBasicAttack(Quaternion aim)
     {
-        //GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
-        //attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
-        //NetworkServer.Spawn(attack);
-        Debug.LogError("Basic Attack Server " + Time.time);
         RpcBasicAttack(aim);
     }
 
     [ClientRpc]
     void RpcBasicAttack(Quaternion aim)
     {
-        Debug.LogError("Basic Attack Client " + Time.time);
         GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
-        attack.GetComponent<_BulletSpawner>().playerId = netId.Value;
+        attack.GetComponent<_BulletSpawner>().playerId = playerId;
     }
 
     [Command]
-    void CmdMeleeAttack(Quaternion aim)
+    void CmdMeleeAttack(Quaternion aim, bool clockWise)
     {
-        //GameObject attack = (GameObject)Instantiate(meleeAttack, rigidbody.position, aim);
-        //attack.GetComponent<MeleeAttack>().targetObject = this.gameObject;
-        //NetworkServer.Spawn(attack);
-        Debug.LogError("Melee Attack Server " + Time.time);
-        RpcMeleeAttack(aim);
+        RpcMeleeAttack(aim, clockWise);
     }
 
     [ClientRpc]
-    void RpcMeleeAttack(Quaternion aim)
+    void RpcMeleeAttack(Quaternion aim, bool clockWise)
     {
-        Debug.LogError("Melee Attack Client " + Time.time);
-        GameObject attack = (GameObject)Instantiate(meleeAttack, rigidbody.position, aim);
-        attack.GetComponent<MeleeAttack>().targetObject = this.gameObject;
+        MeleeAttack attack = ((GameObject)Instantiate(meleeAttack, rigidbody.position, aim)).GetComponent<MeleeAttack>();
+        attack.target = transform;
+        attack.clockWise = clockWise;
+        
     }
 
     void OnTriggerEnter(Collider c)

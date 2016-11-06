@@ -5,9 +5,9 @@ using System.Collections;
 public class BulletId : MonoBehaviour
 {
     //[SyncVar]
-    private uint _playerId;
+    private int _playerId;
 
-    public uint playerId
+    public int playerId
     {
         get { return _playerId; }
         set { _playerId = value; }

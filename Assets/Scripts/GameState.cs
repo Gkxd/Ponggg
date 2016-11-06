@@ -4,15 +4,23 @@ using System.Collections;
 
 public class GameState : NetworkBehaviour
 {
+    public static PongBall Ball { get; set; }
+    public static int PlayerCounter
+    {
+        get { if (instance) return instance.playerCounter; return -1; }
+        set { if (instance) instance.playerCounter = value; }
+    }
+
     public GameObject ballPrefab;
 
     private static GameState instance;
-
-    public static PongBall Ball { get; set; }
+    
+    private int playerCounter;
 
     void Start()
     {
-        instance = this;
+        if (!instance) instance = this;
+        else Destroy(gameObject);
 
         if (!GameObject.FindObjectOfType<PongBall>())
         {
@@ -24,10 +32,5 @@ public class GameState : NetworkBehaviour
         {
             Ball = GameObject.FindObjectOfType<PongBall>();
         }
-    }
-
-    void Update()
-    {
-
     }
 }
