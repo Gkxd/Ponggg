@@ -19,12 +19,19 @@ public class GameState : NetworkBehaviour
     public static PlayerController Player1
     {
         get { if (instance) return instance.player1; return null; }
-        set { if (instance) { instance.player1 = value; SpawnBall(); } }
+        set { if (instance) { instance.player1 = value; SpawnBall(); IsPlaying = true; } }
+    }
+    public static bool IsPlaying {
+        get { if (instance) return instance.isPlaying; return false; }
+        set { if (instance) instance.isPlaying = value; }
     }
 
     public GameObject ballPrefab;
 
     private static GameState instance;
+
+    [SyncVar]
+    private bool isPlaying;
 
     private int playerCounter;
     private PlayerController player0;
@@ -38,7 +45,6 @@ public class GameState : NetworkBehaviour
 
     public static void SpawnBall()
     {
-        Debug.LogError("Spawning Ball... " + Time.time);
         if (instance)
         {
             instance.StartCoroutine(instance.SpawnBallAfterDelay());
