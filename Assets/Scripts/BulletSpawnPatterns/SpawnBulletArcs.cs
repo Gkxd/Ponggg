@@ -25,14 +25,10 @@ public class SpawnBulletArcs : _BulletSpawner
         Vector3 startDirection = Quaternion.Euler(new Vector3(0, 0, -arcRange * 0.5f)) * transform.right;
         Vector3 endDirection = Quaternion.Euler(new Vector3(0, 0, arcRange * 0.5f)) * transform.right;
 
-        // Debug visuals
-        // Debug.DrawRay(transform.position, startDirection, Color.red, 100);
-        // Debug.DrawRay(transform.position, endDirection, Color.blue, 100);
-
         // Spawn the bullets
         for (int i = 0; i < arcLayers; i++)
         {
-            float layerSpeed = Mathf.Lerp(minSpeed, maxSpeed, i / (arcLayers - 1f));
+            float layerSpeed = Mathf.Lerp(minSpeed, maxSpeed, arcLayers == 1 ? 1 : i / (arcLayers - 1f));
             for (int j = 0; j < arcAmount; j++)
             {
                 Vector3 direction = Vector3.Slerp(startDirection, endDirection, j / (arcAmount - 1f));
