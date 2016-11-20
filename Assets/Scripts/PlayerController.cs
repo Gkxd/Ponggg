@@ -63,12 +63,12 @@ public class PlayerController : NetworkBehaviour
     public int hp
     {
         get { return _hp; }
-        private set { _hp = value; }
+        private set { _hp = Mathf.Clamp(value, 0, maxHp); }
     }
     public int mp
     {
         get { return _mp; }
-        private set { _mp = value; }
+        private set { _mp = Mathf.Clamp(value, 0, maxMp); }
     }
 
     public float lastTimeOfMeleeAttack
@@ -96,6 +96,8 @@ public class PlayerController : NetworkBehaviour
     private new Rigidbody rigidbody;
     private Camera playerCamera;
     private NetworkIdentity networkIdentity;
+    private RectTransform hpBar;
+    private RectTransform mpBar;
 
     void Start()
     {
@@ -107,7 +109,7 @@ public class PlayerController : NetworkBehaviour
 
         StartCoroutine(RecoverHp());
         StartCoroutine(RecoverMp());
-        
+
         if (networkIdentity.isServer)
         {
             CmdSetPlayerNumber();
@@ -117,11 +119,15 @@ public class PlayerController : NetworkBehaviour
         {
             transform.position = new Vector3(-7, 0, 0);
             GameState.Player0 = this;
+            hpBar = GameObject.Find("HP1_Fill").GetComponent<RectTransform>();
+            mpBar = GameObject.Find("MP1_Fill").GetComponent<RectTransform>();
         }
         else if (playerId == 1)
         {
             transform.position = new Vector3(7, 0, 0);
             GameState.Player1 = this;
+            hpBar = GameObject.Find("HP2_Fill").GetComponent<RectTransform>();
+            mpBar = GameObject.Find("MP2_Fill").GetComponent<RectTransform>();
         }
         else
         {
@@ -138,6 +144,19 @@ public class PlayerController : NetworkBehaviour
 
     void Update()
     {
+        #region UI Update
+
+        hpBar.localScale = new Vector3(Mathf.Lerp(hpBar.localScale.x, hp / (float)maxHp, Time.deltaTime * 20), 1, 1);
+        mpBar.localScale = new Vector3(Mathf.Lerp(mpBar.localScale.x, mp / (float)maxMp, Time.deltaTime * 20), 1, 1);
+
+        if (hp == 0)
+        {
+
+        }
+
+        #endregion
+
+        // Below code should only be executed by local player
         if (!isLocalPlayer) return;
 
         #region Movement
@@ -169,7 +188,7 @@ public class PlayerController : NetworkBehaviour
         {
             newPosition.x = Mathf.Clamp(newPosition.x, 3, 9);
         }
-        newPosition.y = Mathf.Clamp(newPosition.y, -5, 5);
+        newPosition.y = Mathf.Clamp(newPosition.y, -5, 4);
 
         transform.position = newPosition;
         #endregion
@@ -206,11 +225,6 @@ public class PlayerController : NetworkBehaviour
             lastTimeOfUltimateAttack = Time.time;
         }
         #endregion Attacks
-
-        if (hp <= 0)
-        {
-            Debug.LogError("Player " + playerId + " HP reached 0!");
-        }
     }
 
     [Command]
@@ -253,6 +267,8 @@ public class PlayerController : NetworkBehaviour
 
     private IEnumerator RecoverHp()
     {
+        while (!GameState.IsPlaying) yield return null;
+
         while (true)
         {
             hp = Mathf.Min(hp + 1, maxHp);
@@ -262,6 +278,8 @@ public class PlayerController : NetworkBehaviour
 
     private IEnumerator RecoverMp()
     {
+        while (!GameState.IsPlaying) yield return null;
+
         while (true)
         {
             mp = Mathf.Min(mp + 1, maxMp);
