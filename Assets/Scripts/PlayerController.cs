@@ -2,18 +2,13 @@
 using System.Collections;
 using UnityEngine.Networking;
 
-[RequireComponent(typeof(Rigidbody))]
-public class PlayerController : NetworkBehaviour
+[System.Serializable]
+public class MoveSet
 {
-    #region Serialized Fields
-    [Header("Player Stats")]
-    public int maxHp;
     public float hpRecoverTime;
-    public int maxMp;
     public float mpRecoverTime;
     public float speed;
-
-    [Header("Player Attacks")]
+    
     public GameObject meleeAttack;
     public float meleeAttackCooldown;
 
@@ -27,11 +22,25 @@ public class PlayerController : NetworkBehaviour
     public GameObject ultimateAttack;
     public float ultimateAttackCooldown;
     public int ultimateAttackMpCost;
+}
+
+[RequireComponent(typeof(Rigidbody))]
+public class PlayerController : NetworkBehaviour
+{
+    #region Serialized Fields
+    [Header("Player Stats")]
+    public int maxHp;
+    public int maxMp;
+
+    public MoveSet[] moveSets;
     #endregion
 
     #region SyncVars
     [SyncVar]
-    private int _playerId = -1;
+    private int _playerId;
+
+    [SyncVar]
+    private int _playerMoveSet;
 
     [SyncVar]
     private int _hp;
@@ -58,6 +67,12 @@ public class PlayerController : NetworkBehaviour
     {
         get { return _playerId; }
         set { _playerId = value; }
+    }
+
+    public int playerMoveSet
+    {
+        get { return _playerMoveSet; }
+        set { _playerMoveSet = (value + moveSets.Length) % moveSets.Length;}
     }
 
     public int hp
@@ -138,7 +153,6 @@ public class PlayerController : NetworkBehaviour
     [Command]
     void CmdSetPlayerNumber()
     {
-        Debug.LogError("Player ID set to " + GameState.PlayerCounter);
         playerId = GameState.PlayerCounter++;
     }
 
@@ -159,8 +173,44 @@ public class PlayerController : NetworkBehaviour
         // Below code should only be executed by local player
         if (!isLocalPlayer) return;
 
-        #region Movement
+        #region Attacks
+        Vector3 aimDirection = Vector3.ProjectOnPlane((playerCamera.ScreenToWorldPoint(Input.mousePosition) - rigidbody.position), playerCamera.transform.forward).normalized;
+        Quaternion aimRotation = Quaternion.FromToRotation(playerCamera.transform.right, aimDirection);
 
+        if (Input.GetKey(KeySettings.MELEE_ATTACK) &&
+            (Time.time - lastTimeOfMeleeAttack) > moveSets[playerMoveSet].meleeAttackCooldown)
+        {
+            lastTimeOfMeleeAttack = Time.time;
+
+            bool up = Vector3.Dot(aimDirection, Vector3.up) > 0;
+
+            CmdMeleeAttack(aimRotation, up ^ playerId == 1);
+        }
+        if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
+            (Time.time - lastTimeOfBasicAttack) > moveSets[playerMoveSet].basicAttackCooldown)
+        {
+            lastTimeOfBasicAttack = Time.time;
+            CmdBasicAttack(aimRotation);
+        }
+        if (Input.GetKey(KeySettings.SPECIAL_ATTACK) &&
+            (Time.time - lastTimeOfSpecialAttack) > moveSets[playerMoveSet].specialAttackCooldown &&
+            mp >= moveSets[playerMoveSet].specialAttackMpCost)
+        {
+            lastTimeOfSpecialAttack = Time.time;
+            CmdSpecialAttack(aimRotation);
+            mp -= moveSets[playerMoveSet].specialAttackMpCost;
+        }
+        if (Input.GetKey(KeySettings.ULTIMATE_ATTACK) &&
+            (Time.time - lastTimeOfUltimateAttack) > moveSets[playerMoveSet].specialAttackCooldown &&
+            mp >= moveSets[playerMoveSet].ultimateAttackMpCost)
+        {
+            lastTimeOfUltimateAttack = Time.time;
+            CmdUltimateAttack(aimRotation);
+            mp -= moveSets[playerMoveSet].ultimateAttackMpCost;
+        }
+        #endregion Attacks
+
+        #region Movement
         Vector3 velocity = Vector3.zero;
         if (Input.GetKey(KeySettings.MOVE_UP))
         {
@@ -179,7 +229,13 @@ public class PlayerController : NetworkBehaviour
             velocity += Vector3.right;
         }
 
-        Vector3 newPosition = transform.position + velocity.normalized * speed * Time.deltaTime;
+        float moveSpeed = moveSets[playerMoveSet].speed;
+        if (Input.GetKey(KeySettings.MELEE_ATTACK) || Input.GetKey(KeySettings.BASIC_ATTACK))
+        {
+            moveSpeed *= 0.5f;
+        }
+
+        Vector3 newPosition = transform.position + velocity.normalized * moveSpeed * Time.deltaTime;
         if (playerId == 0)
         {
             newPosition.x = Mathf.Clamp(newPosition.x, -9, -3);
@@ -193,38 +249,15 @@ public class PlayerController : NetworkBehaviour
         transform.position = newPosition;
         #endregion
 
-        #region Attacks
-        Vector3 aimDirection = Vector3.ProjectOnPlane((playerCamera.ScreenToWorldPoint(Input.mousePosition) - rigidbody.position), playerCamera.transform.forward).normalized;
-        Quaternion aimRotation = Quaternion.FromToRotation(playerCamera.transform.right, aimDirection);
-
-        if (Input.GetKey(KeySettings.MELEE_ATTACK) &&
-            (Time.time - lastTimeOfMeleeAttack) > meleeAttackCooldown)
+        // Switch move sets
+        if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            lastTimeOfMeleeAttack = Time.time;
-
-            bool up = Vector3.Dot(aimDirection, Vector3.up) > 0;
-
-            CmdMeleeAttack(aimRotation, up ^ playerId == 1);
+            playerMoveSet++;
         }
-        if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
-            (Time.time - lastTimeOfBasicAttack) > basicAttackCooldown)
+        if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            lastTimeOfBasicAttack = Time.time;
-            CmdBasicAttack(aimRotation);
+            playerMoveSet--;
         }
-        if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
-            (Time.time - lastTimeOfSpecialAttack) > specialAttackCooldown &&
-            mp > specialAttackMpCost)
-        {
-            lastTimeOfSpecialAttack = Time.time;
-        }
-        if (Input.GetKey(KeySettings.BASIC_ATTACK) &&
-            (Time.time - lastTimeOfUltimateAttack) > specialAttackCooldown &&
-            mp > ultimateAttackMpCost)
-        {
-            lastTimeOfUltimateAttack = Time.time;
-        }
-        #endregion Attacks
     }
 
     [Command]
@@ -236,7 +269,7 @@ public class PlayerController : NetworkBehaviour
     [ClientRpc]
     void RpcBasicAttack(Quaternion aim)
     {
-        GameObject attack = (GameObject)Instantiate(basicAttack, rigidbody.position, aim);
+        GameObject attack = (GameObject)Instantiate(moveSets[playerMoveSet].basicAttack, rigidbody.position, aim);
         attack.GetComponent<_BulletSpawner>().playerId = playerId;
     }
 
@@ -249,9 +282,35 @@ public class PlayerController : NetworkBehaviour
     [ClientRpc]
     void RpcMeleeAttack(Quaternion aim, bool clockWise)
     {
-        MeleeAttack attack = ((GameObject)Instantiate(meleeAttack, rigidbody.position, aim)).GetComponent<MeleeAttack>();
+        MeleeAttack attack = ((GameObject)Instantiate(moveSets[playerMoveSet].meleeAttack, rigidbody.position, aim)).GetComponent<MeleeAttack>();
         attack.target = transform;
         attack.clockWise = clockWise;
+    }
+
+    [Command]
+    void CmdSpecialAttack(Quaternion aim)
+    {
+        RpcSpecialAttack(aim);
+    }
+
+    [ClientRpc]
+    void RpcSpecialAttack(Quaternion aim)
+    {
+        GameObject attack = (GameObject)Instantiate(moveSets[playerMoveSet].specialAttack, rigidbody.position, aim);
+        attack.GetComponent<_BulletSpawner>().playerId = playerId;
+    }
+
+    [Command]
+    void CmdUltimateAttack(Quaternion aim)
+    {
+        RpcUltimateAttack(aim);
+    }
+
+    [ClientRpc]
+    void RpcUltimateAttack(Quaternion aim)
+    {
+        GameObject attack = (GameObject)Instantiate(moveSets[playerMoveSet].ultimateAttack, rigidbody.position, aim);
+        attack.GetComponent<_BulletSpawner>().playerId = playerId;
     }
 
     void OnTriggerEnter(Collider c)
@@ -272,7 +331,7 @@ public class PlayerController : NetworkBehaviour
         while (true)
         {
             hp = Mathf.Min(hp + 1, maxHp);
-            yield return new WaitForSeconds(hpRecoverTime);
+            yield return new WaitForSeconds(moveSets[playerMoveSet].hpRecoverTime);
         }
     }
 
@@ -283,7 +342,7 @@ public class PlayerController : NetworkBehaviour
         while (true)
         {
             mp = Mathf.Min(mp + 1, maxMp);
-            yield return new WaitForSeconds(mpRecoverTime);
+            yield return new WaitForSeconds(moveSets[playerMoveSet].mpRecoverTime);
         }
     }
 
